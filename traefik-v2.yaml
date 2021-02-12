@@ -1,0 +1,66 @@
+version: "3.8"
+
+networks:
+  traefik_v2:
+    external: true
+
+configs:
+  traefik.certificate:
+    file: ./shared_ssl/certificate.crt
+  traefikv2.config:
+    file: ./v2/traefik/configs/config.yaml
+  traefikv2.dashboard:
+    file: ./v2/traefik/configs/dashboard.yaml
+
+secrets:
+  traefik.ssl_key:
+    file: ./shared_ssl/ssl.key
+
+services:
+  traefik:
+    image: docker.io/traefik:2.4.2
+    ports:
+      - target: 443
+        published: 9443
+        protocol: tcp
+        mode: ingress
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: ingress
+    networks:
+      - traefik_v2
+    secrets:
+      - source: traefik.ssl_key
+        target: secret.key
+    configs:
+      - source: traefik.certificate
+        target: /etc/traefik/certificate.crt
+      - source: traefikv2.config
+        target: /etc/traefik/traefik.yaml
+      - source: traefikv2.dashboard
+        target: /etc/traefik/dashboard.yaml
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: false
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      replicas: 1
+
+  whoami_v2:
+    image: docker.io/traefik/whoami
+    networks:
+    - traefik_v2
+    deploy:
+      labels:
+        traefik.enable: "true"
+        traefik.http.routers.whoami_v2.rule: Host(`test-v2`) && PathPrefix(`/`)
+        traefik.http.routers.whoami_v2.entrypoints: https
+        traefik.http.services.whoami_v2.loadbalancer.server.port: 80
+        traefik.http.services.whoami_v2.loadbalancer.server.scheme: http
+
+

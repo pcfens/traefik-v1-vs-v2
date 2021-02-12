@@ -1,0 +1,26 @@
+version: "3.8"
+
+networks:
+  traefik_v1:
+    external: true
+  traefik_v2:
+    external: true
+
+services:
+  whoami_dualstack:
+    image: docker.io/traefik/whoami
+    networks:
+    - traefik_v1
+    - traefik_v2
+    deploy:
+      labels:
+        traefik.backend: whoami_dual
+        traefik.frontend.rule: "Host:test-dual;PathPrefix:/"
+        traefik.port: "80"
+        traefik.frontend.passHostHeader: "true"
+
+        traefik.enable: "true"
+        traefik.http.routers.whoami_dual.rule: Host(`test-dual`) && PathPrefix(`/`)
+        traefik.http.routers.whoami_dual.entrypoints: https
+        traefik.http.services.whoami_dual.loadbalancer.server.port: 80
+        traefik.http.services.whoami_dual.loadbalancer.server.scheme: http

@@ -1,0 +1,50 @@
+providers:
+  docker:
+    network: traefik_v2
+    exposedByDefault: false
+    swarmMode: true
+  file:
+    watch: true
+    filename: /etc/traefik/dashboard.yaml
+log:
+  level: INFO
+  format: json
+accessLog:
+  bufferingSize: 0
+  format: json
+metrics:
+  prometheus:
+    addServicesLabels: true
+    entryPoint: metrics
+global:
+  sendAnonymousUsage: true
+ping:
+  entryPoint: admin
+api:
+  dashboard: true
+entryPoints:
+  metrics:
+    address: ":8002"
+  admin:
+    address: ":8000"
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          scheme: https
+          to: https
+          permanent: true
+  https:
+    address: ":443"
+    http:
+      tls:
+        options: default
+    forwardedHeaders:
+      trustedIPs:
+        - 127.0.0.1/8
+        - 10.255.0.0/16
+    proxyProtocol:
+      trustedIPs:
+        - 127.0.0.1/8
+        - 10.255.0.0/16

@@ -1,0 +1,61 @@
+version: "3.8"
+
+networks:
+  traefik_v1:
+    external: true
+
+configs:
+  traefik.certificate:
+    file: ./shared_ssl/certificate.crt
+  traefikv1.config:
+    file: ./v1/traefik/configs/config.toml
+
+secrets:
+  traefik.ssl_key:
+    file: ./shared_ssl/ssl.key
+
+services:
+  traefik:
+    image: docker.io/traefik:1.7.28-alpine
+    command: --api --docker --docker.swarmmode --docker.watch --docker.network=traefik_v1 --logLevel=warn -c /etc/traefik/config.toml
+    ports:
+      - target: 443
+        published: 8443
+        protocol: tcp
+        mode: ingress
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    networks:
+      - traefik_v1
+    secrets:
+      - source: traefik.ssl_key
+        target: secret.key
+    configs:
+      - source: traefik.certificate
+        target: /etc/traefik/certificate.crt
+      - source: traefikv1.config
+        target: /etc/traefik/config.toml
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: false
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      replicas: 1
+
+  whoami_v1:
+    image: docker.io/traefik/whoami
+    networks:
+    - traefik_v1
+    deploy:
+      labels:
+        traefik.backend: whoami
+        traefik.frontend.rule: "Host:test-v1;PathPrefix:/"
+        traefik.port: "80"
+        traefik.docker.network: traefik_v1
+        traefik.frontend.passHostHeader: "true"

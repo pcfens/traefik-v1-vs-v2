@@ -1,0 +1,20 @@
+defaultEntryPoints = ["https"]
+[entryPoints]
+  [entryPoints.https]
+  address = ":443"
+    [entryPoints.https.tls]
+    minVersion = "VersionTLS12"
+      [[entryPoints.https.tls.certificates]]
+      CertFile = "/etc/traefik/certificate.crt"
+      KeyFile = "/run/secrets/secret.key"
+    [entryPoints.https.proxyProtocol]
+      trustedIPs = ["127.0.0.1/8", "10.255.0.0/16"]
+    [entryPoints.https.forwardedHeaders]
+      trustedIPs = ["127.0.0.1/8", "10.255.0.0/16"]
+[accessLog]
+format = "json"
+
+[metrics]
+  [metrics.prometheus]
+    entryPoint = "traefik"
+    buckets = [0.1,0.3,1.2,5.0]
