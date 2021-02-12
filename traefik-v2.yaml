@@ -9,8 +9,9 @@ configs:
     file: ./shared_ssl/certificate.crt
   traefikv2.config:
     file: ./v2/traefik/configs/config.yaml
-  traefikv2.dashboard:
-    file: ./v2/traefik/configs/dashboard.yaml
+  # Dynamic config isn't very dynamic in Docker, but is in k8s.
+  traefikv2.dynamic-config:
+    file: ./v2/traefik/configs/dynamic-config.yaml
 
 secrets:
   traefik.ssl_key:
@@ -38,8 +39,8 @@ services:
         target: /etc/traefik/certificate.crt
       - source: traefikv2.config
         target: /etc/traefik/traefik.yaml
-      - source: traefikv2.dashboard
-        target: /etc/traefik/dashboard.yaml
+      - source: traefikv2.dynamic-config
+        target: /etc/traefik/dynamic-config.yaml
     volumes:
       - type: bind
         source: /var/run/docker.sock

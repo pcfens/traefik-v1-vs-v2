@@ -2,8 +2,11 @@ Traefik 1.x and 2.x
 ===================
 
 We recently finished a migration from [Traefik](https://traefik.io/)
-v1 to v2 and received some questions about seeing the two versions
-side by side.
+v1 to v2 and received some questions about the process.
+
+If you're upgrading be sure to read over the [migration docs](https://doc.traefik.io/traefik/migration/v1-to-v2/) too.
+
+## Notes before Starting
 
 I've included a self-signed SSL certificate and private key for ease of use.
 Don't use them in production.
@@ -11,15 +14,15 @@ Don't use them in production.
 I use a separate Docker network for each version of Traefik for better
 separation, but it's not strictly required.
 
+The configurations here are stripped of most extraneous configurations.
+When running in production be sure you secure all of the admin endpoints,
+including your metrics collections in whatever way works for you.
 ## Prerequsites
-
-**Important:** Copy and pasting the commands below may break things, so I
-recommend you start on an otherwise empty cluster.
 
 To follow this guide as is you'll need a few things:
 
 - cURL
-- [Docker](https://docs.docker.com/get-docker/)running in Swarm mode (outside the scope of this document).
+- [Docker](https://docs.docker.com/get-docker/) running in Swarm mode (outside the scope of this document).
 - Load Balancing Networks Created:
 ```bash
 docker network create --driver=overlay traefik_v1
@@ -27,6 +30,9 @@ docker network create --driver=overlay traefik_v2
 ```
 
 ## Running
+
+**Warning:** Copy and pasting the commands below may break things if you run it on a swarm you care about. If you're not sure, you should probably use an empty
+swarm cluster.
 
 To start v1 run:
 
@@ -49,10 +55,10 @@ traefik-v2
 Once things are running we'll end up with a few things running:
 - Traefik v1
   - HTTPS listening on port 8443
-  - [Dashboard](https://localhost:8080/dashboard/) listening on port 8080 for troubleshooting
+  - [Dashboard](https://localhost:8080/dashboard/) listening on port 8080
 - Traefik v2
   - HTTPS listening on port 9443
-  - [Dashboard](https://localhost:8000/dashboard/) listening on port 8000 for troubleshooting (requires login with admin/admin)
+  - [Dashboard](https://localhost:8000/dashboard/) listening on port 8000
 - whoami_v1
   - Listening internally, accessible only through Traefik v1
 - whoami_v2
@@ -69,6 +75,7 @@ note that changing `test-v1` to anything else will result in a 404 error.
 ### Testing Traefik v2
 
 You should get back some metadata from the whoami_v2 container from
+
 `curl -k -H "Host: test-v2" https://localhost:9443/`
 
 Note that changing `test-v2` to anything else will result in a 404 error.
@@ -89,13 +96,14 @@ dualstack-app
 Wait about 10 seconds for both instances of Traefik to pick up our new
 application, then test.
 
-If you get info back from
-`curl -k -H "Host: test-dual" https://localhost:8443/`
-then you know that Traefik v1 is serving your application.
+To test Traefik v1 we'll use
 
-We'll change the port only to
+`curl -k -H "Host: test-dual" https://localhost:8443/`
+
+
+Traefik v2 is requires changing the port so that we run
+
 `curl -k -H "Host: test-dual" https://localhost:9443/`
-and you'll see that Traefik v2 also works.
 
 #### Notes about Multiple Versions
 

@@ -1,0 +1,21 @@
+# We've named this the dynamic configuration because it can
+# change without restarting Traefik. In Docker, that's not
+# very practical (or required) though.
+
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certificate.crt
+        keyFile: /run/secrets/secret.key
+  options:
+    default:
+      minVersion: VersionTLS12
+
+http:
+  routers:
+    api:
+      entryPoints:
+        - admin
+      rule: PathPrefix(`/api`) || PathPrefix(`/dashboard`)
+      service: api@internal

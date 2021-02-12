@@ -5,23 +5,18 @@ providers:
     swarmMode: true
   file:
     watch: true
-    filename: /etc/traefik/dashboard.yaml
+    filename: /etc/traefik/dynamic-config.yaml
 log:
-  level: INFO
+  level: WARN
   format: json
 accessLog:
   bufferingSize: 0
   format: json
-metrics:
-  prometheus:
-    addServicesLabels: true
-    entryPoint: metrics
-global:
-  sendAnonymousUsage: true
 ping:
   entryPoint: admin
 api:
   dashboard: true
+  insecure: true
 entryPoints:
   metrics:
     address: ":8002"
@@ -40,11 +35,3 @@ entryPoints:
     http:
       tls:
         options: default
-    forwardedHeaders:
-      trustedIPs:
-        - 127.0.0.1/8
-        - 10.255.0.0/16
-    proxyProtocol:
-      trustedIPs:
-        - 127.0.0.1/8
-        - 10.255.0.0/16
